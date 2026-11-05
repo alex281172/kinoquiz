@@ -86,9 +86,10 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mute
 .opt.bad{background:var(--badbg);border-color:var(--bad)}
 .opt.bad .k{background:var(--bad);color:#fff}
 .opt.dim{opacity:.45}
-@media (min-width:700px){body{font-size:19px}.opts{grid-template-columns:1fr 1fr;gap:14px}.qtext{font-size:34px;margin-bottom:28px}.opt{min-height:110px;font-size:21px;padding:18px 20px}.opt .k{width:36px;height:36px;font-size:16px}.round{font-size:15px}.btn{min-height:66px;font-size:20px}.verdict{font-size:20px}.face .t{font-size:32px}.face.back .t{font-size:36px}.brand h1{font-size:36px}.mode{min-height:88px}}
+@media (min-width:700px){body{font-size:19px}.opts{grid-template-columns:1fr 1fr;gap:14px}.qtext{font-size:34px;margin-bottom:28px}.opt{min-height:110px;font-size:21px;padding:18px 20px}.opt .k{width:36px;height:36px;font-size:16px}.round{font-size:15px}.btn{min-height:66px;font-size:20px}.verdict{font-size:20px}.face .t{font-size:32px}.face.back .t{font-size:36px}.brand h1{font-size:36px}.mode{min-height:88px}.note{font-size:18px}}
 .locked .opt{pointer-events:none}
 .verdict{min-height:28px;margin:16px 0 4px;font-weight:600;font-size:17px}
+.note{color:var(--muted);font-size:15.5px;line-height:1.4;margin-bottom:6px}
 .verdict.ok{color:var(--ok)} .verdict.bad{color:#ff8a7f}
 .next{margin-top:auto;position:sticky;bottom:calc(10px + var(--safe-b));padding-top:12px}
 .btn{width:100%;min-height:58px;border-radius:var(--r);background:var(--gold);color:#1d160d;font-weight:700;font-size:18px}
@@ -170,6 +171,7 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mute
   <h3 class="qtext serif" id="qText"></h3>
   <div class="opts" id="opts"></div>
   <div class="verdict" id="verdict"></div>
+  <div class="note" id="note"></div>
   <div class="next"><button class="btn" id="qNext" hidden>Дальше</button></div>
 </section>
 
@@ -253,7 +255,7 @@ function show(id){
 
 // ---------- главная ----------
 function renderHome(){
-  const sw = $('switch'); sw.innerHTML = '';
+  const sw = $('switch'); sw.innerHTML = ''; sw.style.gridTemplateColumns = 'repeat(' + QUIZZES.length + ',1fr)';
   QUIZZES.forEach(z => {
     const b = document.createElement('button');
     b.className = 'seg' + (z.id === QUIZ.id ? ' on' : '');
@@ -340,7 +342,7 @@ function nextQ(){
     b.onclick = () => answer(oi);
     box.appendChild(b);
   });
-  $('verdict').textContent = ''; $('verdict').className = 'verdict';
+  $('verdict').textContent = ''; $('verdict').className = 'verdict'; $('note').textContent = '';
   $('qNext').hidden = true;
   updProg();
 }
@@ -382,6 +384,7 @@ function answer(i){
     box.classList.add('shake'); setTimeout(() => box.classList.remove('shake'), 350);
     if (navigator.vibrate) navigator.vibrate([40,40,40]);
   }
+  $('note').textContent = q.e || '';
   $('qNext').hidden = false;
   $('qNext').textContent = S.queue.length ? 'Дальше' : 'Итоги';
   updProg();
@@ -445,7 +448,7 @@ function nextCard(){
     $('cQ').textContent = q.q;
     $('cA').textContent = q.o[q.a];
     $('cA').style.fontSize = q.o[q.a].length > 70 ? '0.8em' : '';
-    $('cQs').textContent = q.q;
+    $('cQs').textContent = q.e || q.q;
   }, C.flipped ? 220 : 0);
   C.flipped = false;
   $('cCount').textContent = 'Помню ' + C.known + ' из ' + C.total;

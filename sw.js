@@ -1,5 +1,5 @@
 // Офлайн-кэш. При изменении вопросов увеличьте номер версии.
-const V = 'kinoquiz-v3';
+const V = 'kinoquiz-v4';
 const FILES = ['./', 'index.html', 'questions.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

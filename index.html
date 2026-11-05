@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17130f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Киноквиз">
+<title>Киноквиз: советская классика</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#17130f; --panel:#221c16; --panel2:#2c241c; --line:#3a3027;
+  --text:#f3e9d2; --muted:#b5a68c; --accent:#d8463c; --gold:#e3b850;
+  --ok:#4fae6b; --okbg:#173322; --bad:#d8463c; --badbg:#3a1714;
+  --r:16px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);
+  font:17px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;touch-action:manipulation}
+.wrap{max-width:760px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+  padding:calc(14px + var(--safe-t)) 18px calc(18px + var(--safe-b))}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+.serif{font-family:Georgia,"Times New Roman",serif}
+
+/* Главная */
+.brand{display:flex;align-items:center;gap:12px;margin:6px 0 18px}
+.brand .reel{width:46px;height:46px;flex:none}
+.brand h1{font-size:28px;line-height:1.05;margin:0;letter-spacing:.2px}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px}
+.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .4s}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:4px 0 10px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.chip{padding:9px 13px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:14.5px;color:var(--muted)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1d160d;font-weight:600}
+.modes{display:grid;gap:10px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;padding:16px;border-radius:var(--r);
+  background:var(--panel);border:1px solid var(--line);min-height:76px;transition:transform .08s}
+.mode:active{transform:scale(.985)}
+.mode .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;font-size:22px;background:var(--panel2)}
+.mode b{display:block;font-size:17.5px}
+.mode span{font-size:14px;color:var(--muted)}
+.mode.primary{background:var(--accent);border-color:var(--accent)}
+.mode.primary span{color:#ffe3dc}
+.mode.primary .ic{background:rgba(0,0,0,.18)}
+.mode[disabled]{opacity:.45;pointer-events:none}
+.foot{margin-top:auto;padding-top:26px;text-align:center}
+.link{color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:8px}
+
+/* Вопрос */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.iconbtn{width:44px;height:44px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.prog{flex:1}
+.prog .row{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.prog .bar{margin:0}
+.prog .bar i{background:var(--accent)}
+.round{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin:6px 0 8px;font-weight:600}
+.qtext{font-size:23px;line-height:1.28;margin:0 0 20px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;min-height:64px;border-radius:var(--r);
+  background:var(--panel);border:2px solid var(--line);font-size:17.5px;transition:background .15s,border-color .15s,transform .08s}
+.opt:active{transform:scale(.985)}
+.opt .k{width:30px;height:30px;border-radius:9px;background:var(--panel2);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--muted);flex:none}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.ok .k{background:var(--ok);color:#fff}
+.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.opt.bad .k{background:var(--bad);color:#fff}
+.opt.dim{opacity:.45}
+@media (min-width:700px){body{font-size:19px}.opts{grid-template-columns:1fr 1fr;gap:14px}.qtext{font-size:34px;margin-bottom:28px}.opt{min-height:110px;font-size:21px;padding:18px 20px}.opt .k{width:36px;height:36px;font-size:16px}.round{font-size:15px}.btn{min-height:66px;font-size:20px}.verdict{font-size:20px}.face .t{font-size:32px}.face.back .t{font-size:36px}.brand h1{font-size:36px}.mode{min-height:88px}}
+.locked .opt{pointer-events:none}
+.verdict{min-height:28px;margin:16px 0 4px;font-weight:600;font-size:17px}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:#ff8a7f}
+.next{margin-top:auto;position:sticky;bottom:calc(10px + var(--safe-b));padding-top:12px}
+.btn{width:100%;min-height:58px;border-radius:var(--r);background:var(--gold);color:#1d160d;font-weight:700;font-size:18px}
+.btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--line);font-weight:600}
+.btn[hidden]{display:none}
+.shake{animation:shake .32s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+
+/* Карточки */
+.card{flex:1;min-height:300px;perspective:1200px;margin-bottom:14px;display:flex}
+.card .in{position:relative;flex:1;min-height:300px;transition:transform .45s;transform-style:preserve-3d}
+.card.flip .in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:22px;padding:26px 22px;display:flex;flex-direction:column;justify-content:center;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--panel);border:1px solid var(--line)}
+.face.back{transform:rotateY(180deg);background:var(--panel2);border-color:var(--gold)}
+.face .lbl{position:absolute;top:18px;left:22px;font-size:12.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.face .t{font-size:25px;line-height:1.3}
+.face.back .t{color:var(--gold);font-size:28px}
+.face .hint{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:14px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.red{background:var(--accent);color:#fff}
+.btn.green{background:var(--ok);color:#fff}
+
+/* Итоги */
+.score{text-align:center;margin:18px 0 8px}
+.score .big{font-size:76px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.score .big small{font-size:32px;color:var(--muted);font-weight:500}
+.score .msg{font-size:21px;margin:12px auto 0;max-width:460px}
+.score .sub{color:var(--muted);margin-top:6px;font-size:15px}
+.mist{margin:22px 0 10px}
+.mi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;font-size:15.5px}
+.mi .qq{margin-bottom:6px}
+.mi .yo{color:#ff8a7f}
+.mi .ra{color:var(--ok)}
+.stack{display:grid;gap:10px;margin-top:auto;padding-top:18px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Главная -->
+<section class="screen on" id="home">
+  <div class="brand">
+    <svg class="reel" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#d8463c"/><circle cx="24" cy="24" r="4" fill="#17130f"/><g fill="#17130f"><circle cx="24" cy="12" r="5"/><circle cx="24" cy="36" r="5"/><circle cx="12" cy="24" r="5"/><circle cx="36" cy="24" r="5"/></g></svg>
+    <div><h1 class="serif">Киноквиз</h1><p>Советская классика · 50 вопросов</p></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sMast">0</b><span>выучено</span><div class="bar"><i id="sMastBar"></i></div></div>
+    <div class="stat"><b id="sErr">0</b><span>в ошибках</span></div>
+    <div class="stat"><b id="sBest">—</b><span>лучший квиз</span></div>
+  </div>
+
+  <h2>Раунды</h2>
+  <div class="chips" id="chips"></div>
+
+  <h2>Режим</h2>
+  <div class="modes">
+    <button class="mode primary" data-mode="train"><div class="ic">🎯</div><div><b>Тренировка</b><span id="mTrain">Вопросы вперемешку, ошибки возвращаются</span></div></button>
+    <button class="mode" data-mode="errors" id="btnErr"><div class="ic">🔁</div><div><b>Работа над ошибками</b><span id="mErr">Только то, на чём ошиблись</span></div></button>
+    <button class="mode" data-mode="cards"><div class="ic">🃏</div><div><b>Карточки</b><span>Вопрос → нажать → ответ</span></div></button>
+    <button class="mode" data-mode="exam"><div class="ic">🏆</div><div><b>Квиз на результат</b><span id="mExam">Все вопросы по порядку, без подсказок, с итоговой оценкой</span></div></button>
+  </div>
+
+  <div class="foot"><button class="link" id="reset">Сбросить прогресс</button></div>
+</section>
+
+<!-- Вопрос -->
+<section class="screen" id="quiz">
+  <div class="top">
+    <button class="iconbtn" id="qBack" aria-label="Выйти"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="prog"><div class="row"><span id="qCount">1 / 50</span><span id="qScore"></span></div><div class="bar"><i id="qBar"></i></div></div>
+  </div>
+  <div class="round" id="qRound"></div>
+  <h3 class="qtext serif" id="qText"></h3>
+  <div class="opts" id="opts"></div>
+  <div class="verdict" id="verdict"></div>
+  <div class="next"><button class="btn" id="qNext" hidden>Дальше</button></div>
+</section>
+
+<!-- Карточки -->
+<section class="screen" id="cards">
+  <div class="top">
+    <button class="iconbtn" id="cBack" aria-label="Выйти"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="prog"><div class="row"><span id="cCount"></span><span id="cLeft"></span></div><div class="bar"><i id="cBar"></i></div></div>
+  </div>
+  <div class="card" id="card">
+    <div class="in">
+      <div class="face front"><div class="lbl" id="cRound"></div><div class="t serif" id="cQ"></div><div class="hint">Нажмите, чтобы увидеть ответ</div></div>
+      <div class="face back"><div class="lbl">Ответ</div><div class="t serif" id="cA"></div><div class="hint" id="cQs"></div></div>
+    </div>
+  </div>
+  <div class="two" id="cBtns" style="visibility:hidden">
+    <button class="btn red" id="cAgain">Повторить</button>
+    <button class="btn green" id="cKnow">Помню</button>
+  </div>
+</section>
+
+<!-- Итоги -->
+<section class="screen" id="result">
+  <div class="score">
+    <div class="big"><span id="rScore">0</span><small> / <span id="rTotal">0</span></small></div>
+    <div class="msg serif" id="rMsg"></div>
+    <div class="sub" id="rSub"></div>
+  </div>
+  <div class="mist" id="rMist"></div>
+  <div class="stack">
+    <button class="btn" id="rErr">Прорешать ошибки</button>
+    <button class="btn ghost" id="rHome">На главную</button>
+  </div>
+</section>
+
+</div>
+
+<script src="questions.js"></script>
+<script>
+(() => {
+const Q = QUIZ.questions, R = QUIZ.rounds, LET = ['А','Б','В','Г'];
+const KEY = 'kinoquiz.v1';
+const $ = id => document.getElementById(id);
+
+// ---------- хранилище ----------
+let store = { stats:{}, best:null, rounds:null };
+try { Object.assign(store, JSON.parse(localStorage.getItem(KEY)) || {}); } catch(e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
+const st = n => store.stats[n] || (store.stats[n] = { c:0, w:0, s:0, last:null });
+// «выучено» — два верных ответа подряд; «в ошибках» — последний ответ неверный
+const isMastered = n => (store.stats[n]?.s || 0) >= 2;
+const isError = n => store.stats[n]?.last === 0;
+
+function record(n, ok){
+  const s = st(n);
+  if (ok){ s.c++; s.s++; s.last = 1; } else { s.w++; s.s = 0; s.last = 0; }
+  save();
+}
+
+let selRounds = Array.isArray(store.rounds) && store.rounds.length ? new Set(store.rounds) : new Set(R.map((_,i)=>i));
+
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pool = () => Q.filter(q => selRounds.has(q.r));
+const word = (n, f) => { const m10=n%10, m100=n%100; return f[(m10===1&&m100!==11)?0:(m10>=2&&m10<=4&&(m100<10||m100>=20))?1:2]; };
+const vq = n => n + ' ' + word(n, ['вопрос','вопроса','вопросов']);
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  window.scrollTo(0,0);
+}
+
+// ---------- главная ----------
+function renderHome(){
+  const chips = $('chips'); chips.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'chip' + (selRounds.size === R.length ? ' on' : '');
+  all.textContent = 'Все';
+  all.onclick = () => { selRounds = selRounds.size === R.length ? new Set() : new Set(R.map((_,i)=>i)); persistRounds(); };
+  chips.appendChild(all);
+  R.forEach((name, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (selRounds.has(i) && selRounds.size !== R.length ? ' on' : '');
+    b.textContent = (i+1) + '. ' + name.replace(/\s*\(.*\)$/,'').replace(/\s—.*$/,'');
+    b.onclick = () => {
+      if (selRounds.size === R.length) selRounds = new Set([i]);
+      else if (selRounds.has(i)) selRounds.delete(i); else selRounds.add(i);
+      if (!selRounds.size) selRounds = new Set(R.map((_,k)=>k));
+      persistRounds();
+    };
+    chips.appendChild(b);
+  });
+
+  const m = Q.filter(q => isMastered(q.n)).length;
+  const e = Q.filter(q => isError(q.n)).length;
+  $('sMast').textContent = m;
+  $('sMastBar').style.width = (m / Q.length * 100) + '%';
+  $('sErr').textContent = e;
+  $('sBest').textContent = store.best == null ? '—' : store.best + '/' + Q.length;
+
+  const p = pool(), pe = p.filter(q => isError(q.n)).length;
+  const scope = selRounds.size === R.length ? '' : ' · выбрано ' + vq(p.length);
+  $('mTrain').textContent = 'Вперемешку, ошибки возвращаются' + scope;
+  $('mErr').textContent = pe ? vq(pe) + ' с ошибкой' + (selRounds.size === R.length ? '' : ' в выбранных раундах') : 'Ошибок пока нет';
+  $('btnErr').disabled = !pe;
+  $('mExam').textContent = selRounds.size === R.length
+    ? 'Все 50 по порядку, итоговая оценка как в игре'
+    : vq(p.length) + ' по порядку, без повторов, со счётом';
+}
+function persistRounds(){ store.rounds = [...selRounds]; save(); renderHome(); }
+
+document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
+$('reset').onclick = () => {
+  if (confirm('Стереть весь прогресс и статистику?')) { store = { stats:{}, best:null, rounds:[...selRounds] }; save(); renderHome(); }
+};
+
+// ---------- сессия вопросов ----------
+let S = null;
+
+function start(mode, list){
+  let qs = list || pool();
+  if (mode === 'errors') qs = qs.filter(q => isError(q.n));
+  if (!qs.length) return;
+  if (mode === 'cards') return startCards(shuffle(qs));
+  if (mode === 'exam') qs = qs.slice().sort((a,b) => a.n - b.n);
+  else {
+    // сначала невыученные, внутри — случайно
+    const weak = shuffle(qs.filter(q => !isMastered(q.n))), strong = shuffle(qs.filter(q => isMastered(q.n)));
+    qs = weak.concat(strong);
+  }
+  S = { mode, queue: qs.slice(), total: qs.length, done: 0, right: 0, firstWrong: new Map(), seen: new Set(), cur: null, answered: false };
+  show('quiz'); nextQ();
+}
+
+function nextQ(){
+  if (!S.queue.length) return finish();
+  const q = S.cur = S.queue.shift();
+  S.answered = false;
+  $('qRound').textContent = 'Раунд ' + (q.r+1) + ' · ' + R[q.r];
+  $('qText').textContent = q.q;
+  const order = shuffle([0,1,2,3]);
+  const box = $('opts'); box.innerHTML = ''; box.classList.remove('locked');
+  order.forEach((oi, pos) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.dataset.i = oi;
+    b.innerHTML = '<span class="k">' + LET[pos] + '</span><span></span>';
+    b.lastChild.textContent = q.o[oi];
+    b.onclick = () => answer(oi);
+    box.appendChild(b);
+  });
+  $('verdict').textContent = ''; $('verdict').className = 'verdict';
+  $('qNext').hidden = true;
+  updProg();
+}
+
+function updProg(){
+  const shown = Math.min(S.done + 1, S.total);
+  $('qCount').textContent = (S.mode === 'exam' ? 'Вопрос ' : '') + shown + ' / ' + S.total;
+  $('qScore').textContent = S.done ? '✓ ' + S.right : '';
+  $('qBar').style.width = (S.done / S.total * 100) + '%';
+}
+
+function answer(i){
+  if (S.answered) return;
+  S.answered = true;
+  const q = S.cur, ok = i === q.a, first = !S.seen.has(q.n);
+  S.seen.add(q.n);
+  record(q.n, ok);
+  const box = $('opts'); box.classList.add('locked');
+  [...box.children].forEach(b => {
+    const bi = +b.dataset.i;
+    if (bi === q.a) b.classList.add('ok');
+    else if (bi === i) b.classList.add('bad');
+    else b.classList.add('dim');
+  });
+  const v = $('verdict');
+  if (ok){
+    v.textContent = first ? 'Верно!' : 'Верно, теперь запомнили'; v.className = 'verdict ok';
+    if (first) S.right++;
+    S.done++;
+    if (navigator.vibrate) navigator.vibrate(15);
+  } else {
+    v.textContent = 'Правильно: ' + q.o[q.a]; v.className = 'verdict bad';
+    if (first) S.firstWrong.set(q.n, i);
+    if (S.mode === 'exam') S.done++;
+    else {
+      // вопрос вернётся через пару карточек
+      S.queue.splice(Math.min(3, S.queue.length), 0, q);
+    }
+    box.classList.add('shake'); setTimeout(() => box.classList.remove('shake'), 350);
+    if (navigator.vibrate) navigator.vibrate([40,40,40]);
+  }
+  $('qNext').hidden = false;
+  $('qNext').textContent = S.queue.length ? 'Дальше' : 'Итоги';
+  updProg();
+}
+
+$('qNext').onclick = nextQ;
+$('qBack').onclick = () => {
+  if (S && S.done && S.queue.length && !confirm('Выйти? Ответы уже сохранены в статистике.')) return;
+  S = null; renderHome(); show('home');
+};
+
+function finish(){
+  const total = S.total, score = S.right;
+  $('rScore').textContent = score; $('rTotal').textContent = total;
+  let msg, sub = '';
+  if (S.mode === 'exam' && total === Q.length){
+    msg = QUIZ.scale.find(([min]) => score >= min)[1];
+    if (store.best == null || score > store.best){ if (store.best != null) sub = 'Новый рекорд!'; store.best = score; save(); }
+    else sub = 'Лучший результат: ' + store.best + '/' + total;
+  } else {
+    const p = score / total;
+    msg = p === 1 ? 'Безупречно!' : p >= .8 ? 'Отлично!' : p >= .6 ? 'Хорошо, но есть что подтянуть' : p >= .4 ? 'Неплохо для начала' : 'Пора пересмотреть классику';
+    sub = S.mode === 'exam' ? 'Верных ответов с первой попытки' : 'С первой попытки. Ошибки вы уже прорешали в конце.';
+  }
+  $('rMsg').textContent = msg; $('rSub').textContent = sub;
+
+  const m = $('rMist'); m.innerHTML = '';
+  if (S.firstWrong.size){
+    const h = document.createElement('h2'); h.textContent = 'Ошибки (' + S.firstWrong.size + ')'; m.appendChild(h);
+    [...S.firstWrong].map(([n,i]) => [Q.find(q => q.n === n), i]).sort((a,b) => a[0].n - b[0].n).forEach(([q,i]) => {
+      const d = document.createElement('div'); d.className = 'mi';
+      d.innerHTML = '<div class="qq"></div><div class="yo"></div><div class="ra"></div>';
+      d.children[0].textContent = q.n + '. ' + q.q;
+      d.children[1].textContent = '✗ ' + q.o[i];
+      d.children[2].textContent = '✓ ' + q.o[q.a];
+      m.appendChild(d);
+    });
+  }
+  const errList = [...S.firstWrong.keys()].map(n => Q.find(q => q.n === n)).filter(q => isError(q.n));
+  $('rErr').hidden = !errList.length;
+  $('rErr').onclick = () => start('train', errList);
+  S = null;
+  show('result');
+}
+$('rHome').onclick = () => { renderHome(); show('home'); };
+
+// ---------- карточки ----------
+let C = null;
+function startCards(qs){
+  C = { queue: qs, total: qs.length, known: 0 };
+  show('cards'); nextCard();
+}
+function nextCard(){
+  if (!C.queue.length){ C = null; renderHome(); show('home'); return; }
+  const q = C.cur = C.queue[0];
+  $('card').classList.remove('flip');
+  $('cBtns').style.visibility = 'hidden';
+  setTimeout(() => {
+    $('cRound').textContent = 'Раунд ' + (q.r+1);
+    $('cQ').textContent = q.q;
+    $('cA').textContent = q.o[q.a];
+    $('cQs').textContent = q.q;
+  }, C.flipped ? 220 : 0);
+  C.flipped = false;
+  $('cCount').textContent = 'Помню ' + C.known + ' из ' + C.total;
+  $('cLeft').textContent = 'осталось ' + C.queue.length;
+  $('cBar').style.width = (C.known / C.total * 100) + '%';
+}
+$('card').onclick = () => {
+  if (!C) return;
+  $('card').classList.toggle('flip');
+  C.flipped = $('card').classList.contains('flip');
+  if (C.flipped) $('cBtns').style.visibility = 'visible';
+};
+$('cKnow').onclick = () => { const q = C.queue.shift(); record(q.n, true); C.known++; C.flipped = true; nextCard(); };
+$('cAgain').onclick = () => { const q = C.queue.shift(); record(q.n, false); C.queue.splice(Math.min(3, C.queue.length), 0, q); C.flipped = true; nextCard(); };
+$('cBack').onclick = () => { C = null; renderHome(); show('home'); };
+
+// ---------- клавиатура (для планшета с клавиатурой) ----------
+document.addEventListener('keydown', e => {
+  if ($('quiz').classList.contains('on') && S){
+    const k = '1234'.indexOf(e.key) + 1 || 'абвг'.indexOf(e.key.toLowerCase()) + 1;
+    if (k && !S.answered){ $('opts').children[k-1]?.click(); }
+    else if ((e.key === 'Enter' || e.key === ' ') && S.answered){ e.preventDefault(); nextQ(); }
+  } else if ($('cards').classList.contains('on') && C){
+    if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); $('card').click(); }
+    else if (C.flipped && e.key === 'ArrowRight') $('cKnow').click();
+    else if (C.flipped && e.key === 'ArrowLeft') $('cAgain').click();
+  }
+});
+
+renderHome();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

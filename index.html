@@ -37,6 +37,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;touch-
 .brand .reel{width:46px;height:46px;flex:none}
 .brand h1{font-size:28px;line-height:1.05;margin:0;letter-spacing:.2px}
 .brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:18px;background:var(--panel);border:1px solid var(--line);margin-bottom:10px}
+.seg{border-radius:13px;padding:10px 8px;text-align:center;color:var(--muted)}
+.seg b{display:block;font-size:16.5px}
+.seg span{font-size:12.5px}
+.seg.on{background:var(--accent);color:#fff}
+.about{color:var(--muted);font-size:14px;margin:0 2px 18px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 12px 10px}
 .stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
@@ -95,7 +101,7 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mute
 .card{flex:1;min-height:300px;perspective:1200px;margin-bottom:14px;display:flex}
 .card .in{position:relative;flex:1;min-height:300px;transition:transform .45s;transform-style:preserve-3d}
 .card.flip .in{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;border-radius:22px;padding:26px 22px;display:flex;flex-direction:column;justify-content:center;
+.face{position:absolute;inset:0;overflow:auto;border-radius:22px;padding:26px 22px;display:flex;flex-direction:column;justify-content:center;
   backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--panel);border:1px solid var(--line)}
 .face.back{transform:rotateY(180deg);background:var(--panel2);border-color:var(--gold)}
 .face .lbl{position:absolute;top:18px;left:22px;font-size:12.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
@@ -128,8 +134,11 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mute
 <section class="screen on" id="home">
   <div class="brand">
     <svg class="reel" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#d8463c"/><circle cx="24" cy="24" r="4" fill="#17130f"/><g fill="#17130f"><circle cx="24" cy="12" r="5"/><circle cx="24" cy="36" r="5"/><circle cx="12" cy="24" r="5"/><circle cx="36" cy="24" r="5"/></g></svg>
-    <div><h1 class="serif">Киноквиз</h1><p>Советская классика · 50 вопросов</p></div>
+    <div><h1 class="serif">Киноквиз</h1><p id="hTitle"></p></div>
   </div>
+
+  <div class="switch" id="switch"></div>
+  <p class="about" id="hAbout"></p>
 
   <div class="stats">
     <div class="stat"><b id="sMast">0</b><span>выучено</span><div class="bar"><i id="sMastBar"></i></div></div>
@@ -201,14 +210,25 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mute
 <script src="questions.js"></script>
 <script>
 (() => {
-const Q = QUIZ.questions, R = QUIZ.rounds, LET = ['А','Б','В','Г'];
-const KEY = 'kinoquiz.v1';
+const LET = ['А','Б','В','Г'];
+const KEY = 'kinoquiz.v2';
 const $ = id => document.getElementById(id);
 
-// ---------- хранилище ----------
-let store = { stats:{}, best:null, rounds:null };
-try { Object.assign(store, JSON.parse(localStorage.getItem(KEY)) || {}); } catch(e){}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} };
+// ---------- хранилище: отдельный прогресс для каждого квиза ----------
+let root = { cur: QUIZZES[0].id, q: {} };
+try { Object.assign(root, JSON.parse(localStorage.getItem(KEY)) || {}); } catch(e){}
+try { const old = JSON.parse(localStorage.getItem('kinoquiz.v1')); if (old && !root.q.classic) root.q.classic = old; } catch(e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(root)); } catch(e){} };
+let QUIZ, Q, R, store, selRounds;
+function useQuiz(id){
+  QUIZ = QUIZZES.find(z => z.id === id) || QUIZZES[0];
+  root.cur = QUIZ.id; Q = QUIZ.questions; R = QUIZ.rounds;
+  store = root.q[QUIZ.id] || (root.q[QUIZ.id] = { stats:{}, best:null, rounds:null });
+  selRounds = Array.isArray(store.rounds) && store.rounds.length ? new Set(store.rounds.filter(i => i < R.length)) : new Set(R.map((_,i)=>i));
+  if (!selRounds.size) selRounds = new Set(R.map((_,i)=>i));
+  save();
+}
+useQuiz(root.cur);
 const st = n => store.stats[n] || (store.stats[n] = { c:0, w:0, s:0, last:null });
 // «выучено» — два верных ответа подряд; «в ошибках» — последний ответ неверный
 const isMastered = n => (store.stats[n]?.s || 0) >= 2;
@@ -220,7 +240,6 @@ function record(n, ok){
   save();
 }
 
-let selRounds = Array.isArray(store.rounds) && store.rounds.length ? new Set(store.rounds) : new Set(R.map((_,i)=>i));
 
 const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; };
 const pool = () => Q.filter(q => selRounds.has(q.r));
@@ -234,6 +253,17 @@ function show(id){
 
 // ---------- главная ----------
 function renderHome(){
+  const sw = $('switch'); sw.innerHTML = '';
+  QUIZZES.forEach(z => {
+    const b = document.createElement('button');
+    b.className = 'seg' + (z.id === QUIZ.id ? ' on' : '');
+    b.innerHTML = '<b></b><span></span>';
+    b.children[0].textContent = z.short; b.children[1].textContent = z.questions.length + ' вопр.';
+    b.onclick = () => { if (z.id !== QUIZ.id){ useQuiz(z.id); renderHome(); } };
+    sw.appendChild(b);
+  });
+  $('hTitle').textContent = QUIZ.title;
+  $('hAbout').textContent = QUIZ.about;
   const chips = $('chips'); chips.innerHTML = '';
   const all = document.createElement('button');
   all.className = 'chip' + (selRounds.size === R.length ? ' on' : '');
@@ -266,14 +296,14 @@ function renderHome(){
   $('mErr').textContent = pe ? vq(pe) + ' с ошибкой' + (selRounds.size === R.length ? '' : ' в выбранных раундах') : 'Ошибок пока нет';
   $('btnErr').disabled = !pe;
   $('mExam').textContent = selRounds.size === R.length
-    ? 'Все 50 по порядку, итоговая оценка как в игре'
+    ? 'Все ' + Q.length + ' по порядку' + (QUIZ.scale ? ', итоговая оценка как в игре' : ', со счётом')
     : vq(p.length) + ' по порядку, без повторов, со счётом';
 }
 function persistRounds(){ store.rounds = [...selRounds]; save(); renderHome(); }
 
 document.querySelectorAll('.mode').forEach(b => b.onclick = () => start(b.dataset.mode));
 $('reset').onclick = () => {
-  if (confirm('Стереть весь прогресс и статистику?')) { store = { stats:{}, best:null, rounds:[...selRounds] }; save(); renderHome(); }
+  if (confirm('Стереть прогресс квиза «' + QUIZ.title + '»?')) { store = root.q[QUIZ.id] = { stats:{}, best:null, rounds:[...selRounds] }; save(); renderHome(); }
 };
 
 // ---------- сессия вопросов ----------
@@ -367,11 +397,12 @@ function finish(){
   const total = S.total, score = S.right;
   $('rScore').textContent = score; $('rTotal').textContent = total;
   let msg, sub = '';
-  if (S.mode === 'exam' && total === Q.length){
+  if (S.mode === 'exam' && total === Q.length && QUIZ.scale){
     msg = QUIZ.scale.find(([min]) => score >= min)[1];
     if (store.best == null || score > store.best){ if (store.best != null) sub = 'Новый рекорд!'; store.best = score; save(); }
     else sub = 'Лучший результат: ' + store.best + '/' + total;
   } else {
+    if (S.mode === 'exam' && total === Q.length && (store.best == null || score > store.best)){ store.best = score; save(); }
     const p = score / total;
     msg = p === 1 ? 'Безупречно!' : p >= .8 ? 'Отлично!' : p >= .6 ? 'Хорошо, но есть что подтянуть' : p >= .4 ? 'Неплохо для начала' : 'Пора пересмотреть классику';
     sub = S.mode === 'exam' ? 'Верных ответов с первой попытки' : 'С первой попытки. Ошибки вы уже прорешали в конце.';
@@ -413,6 +444,7 @@ function nextCard(){
     $('cRound').textContent = 'Раунд ' + (q.r+1);
     $('cQ').textContent = q.q;
     $('cA').textContent = q.o[q.a];
+    $('cA').style.fontSize = q.o[q.a].length > 70 ? '0.8em' : '';
     $('cQs').textContent = q.q;
   }, C.flipped ? 220 : 0);
   C.flipped = false;
